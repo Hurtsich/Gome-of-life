@@ -28,7 +28,7 @@ const (
 )
 
 func NewGrid(length int) Matrice {
-	matrice = Matrice{make([][]cell.Cell, length)}
+	matrice = Matrice{grid: make([][]cell.Cell, length)}
 	for i := 0; i < length; i++ {
 		for j := 0; j < length; j++ {
 			var blob cell.Cell
