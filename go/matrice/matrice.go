@@ -7,7 +7,7 @@ import (
 )
 
 type Matrice struct {
-	grid [][]cell.Cell
+	grid [][]*cell.Cell
 }
 
 var (
@@ -28,15 +28,18 @@ const (
 )
 
 func NewGrid(length int) Matrice {
-	matrice = Matrice{grid: make([][]cell.Cell, length)}
-	for i := 0; i < length; i++ {
-		for j := 0; j < length; j++ {
+	matrice = Matrice{grid: make([][]*cell.Cell, length)}
+	for i := range matrice.grid {
+		matrice.grid[i] = make([]*cell.Cell, length)
+	}
+	for i := 0; i < length-1; i++ {
+		for j := 0; j < length-1; j++ {
 			var blob cell.Cell
-			if matrice.grid[i][j] != (cell.Cell{}) {
+			if matrice.grid[i][j] == nil {
 				blob = cell.NewCell(RandomStatus())
-				matrice.grid[i][j] = blob
+				matrice.grid[i][j] = &blob
 			} else {
-				blob = matrice.grid[i][j]
+				blob = *matrice.grid[i][j]
 			}
 			if i > 0 {
 				newNeighbor(i-1, j, Up, &blob.Up)
@@ -49,7 +52,7 @@ func NewGrid(length int) Matrice {
 			}
 			if j > 0 {
 				newNeighbor(i, j-1, Left, &blob.Left)
-				if (i < length) {
+				if i < length {
 					newNeighbor(i+1, j-1, DownLeft, &blob.DownLeft)
 				}
 			}
@@ -68,11 +71,12 @@ func NewGrid(length int) Matrice {
 }
 
 func newNeighbor(column, row int, side Neighbors, membrane *cell.Membrane) {
-	if matrice.grid[column][row] != (cell.Cell{}) {
+	if matrice.grid[column][row] == nil {
 		blob := cell.NewCell(RandomStatus())
+		matrice.grid[column][row] = &blob
 		neighborsMembrane(blob, membrane, side)
 	} else {
-		neighborsMembrane(matrice.grid[column][row], membrane, side)
+		neighborsMembrane(*matrice.grid[column][row], membrane, side)
 	}
 }
 
