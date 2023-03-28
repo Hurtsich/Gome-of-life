@@ -1,7 +1,10 @@
 package matrice
 
 import (
+	"image"
+	"image/color"
 	"math/rand"
+	"sync"
 
 	"github.com/Hurtsich/Gome-of-life/go/cell"
 )
@@ -36,7 +39,7 @@ func NewGrid(length int) Matrice {
 		for j := 0; j < length-1; j++ {
 			var blob cell.Cell
 			if matrice.grid[i][j] == nil {
-				blob = cell.NewCell(RandomStatus())
+				blob = cell.NewCell(randomStatus())
 				matrice.grid[i][j] = &blob
 			} else {
 				blob = *matrice.grid[i][j]
@@ -70,9 +73,36 @@ func NewGrid(length int) Matrice {
 	return matrice
 }
 
+func (m Matrice) Breath() {
+	var wg sync.WaitGroup
+	for _, cellColumn := range m.grid {
+		for _, cell := range cellColumn {
+			wg.Add(1)
+			go cell.Live()
+		}
+	}
+	
+} 
+
+func (m Matrice) Photo() *image.NRGBA {
+	topLeft := image.Point{0, 0}
+	bottomRight := image.Point{len(m.grid), len(m.grid)}
+	photo := image.NewNRGBA(image.Rectangle{topLeft, bottomRight})
+	for col, cellColumn := range m.grid {
+		for row, cell := range cellColumn {
+			if cell.Status {
+				photo.Set(row, col, color.RGBA{uint8(255), uint8(255), uint8(255), uint8(255)})
+			} else {
+				photo.Set(row, col, color.RGBA{uint8(0), uint8(0), uint8(0), uint8(255)})
+			}
+		}
+	}
+	return photo
+}
+
 func newNeighbor(column, row int, side Neighbors, membrane *cell.Membrane) {
 	if matrice.grid[column][row] == nil {
-		blob := cell.NewCell(RandomStatus())
+		blob := cell.NewCell(randomStatus())
 		matrice.grid[column][row] = &blob
 		neighborsMembrane(blob, membrane, side)
 	} else {
@@ -101,6 +131,6 @@ func neighborsMembrane(cell cell.Cell, membrane *cell.Membrane, side Neighbors) 
 	}
 }
 
-func RandomStatus() bool {
-	return rand.Intn(100) < 40
+func randomStatus() bool {
+	return rand.Intn(100) < 10
 }
