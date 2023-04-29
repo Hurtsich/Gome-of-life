@@ -1,5 +1,10 @@
 package cell
 
+import (
+	"fmt"
+	"sync"
+)
+
 type Cell struct {
 	Up        Membrane
 	UpLeft    Membrane
@@ -26,7 +31,17 @@ func NewCell(status bool) Cell {
 	}
 }
 
-func (c *Cell) Live() {
+func (c *Cell) Live(wg *sync.WaitGroup) {
+	wg.Add(1)
+	c.Up.Out <- c.Status
+	c.UpLeft.Out <- c.Status
+	c.Left.Out <- c.Status
+	c.DownLeft.Out <- c.Status
+	c.Down.Out <- c.Status
+	c.DownRight.Out <- c.Status
+	c.Right.Out <- c.Status
+	c.UpRight.Out <- c.Status
+	fmt.Println("Status OUT")
 	neighbors := 0
 	neighbors += isAlive(<-c.Up.In)
 	neighbors += isAlive(<-c.UpLeft.In)
@@ -36,6 +51,7 @@ func (c *Cell) Live() {
 	neighbors += isAlive(<-c.DownRight.In)
 	neighbors += isAlive(<-c.Right.In)
 	neighbors += isAlive(<-c.UpRight.In)
+	fmt.Println("Calculating Status")
 	if 1 < neighbors && neighbors < 4 && c.Status {
 		c.Status = true
 	} else if neighbors > 4 {
@@ -43,14 +59,6 @@ func (c *Cell) Live() {
 	} else {
 		c.Status = false
 	}
-	c.Up.Out <- c.Status
-	c.UpLeft.Out <- c.Status
-	c.Left.Out <- c.Status
-	c.DownLeft.Out <- c.Status
-	c.Down.Out <- c.Status
-	c.DownRight.Out <- c.Status
-	c.Right.Out <- c.Status
-	c.UpRight.Out <- c.Status
 }
 
 func isAlive(b bool) int {

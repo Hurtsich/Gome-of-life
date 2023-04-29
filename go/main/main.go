@@ -4,23 +4,38 @@ import (
 	"bufio"
 	"fmt"
 	"image"
-	"image/color"
-	"image/png"
+	"image/gif"
 	"os"
 
 	"github.com/Hurtsich/Gome-of-life/go/matrice"
 )
 
-func main() {
-	m := matrice.NewGrid(100)
-	photo := m.Breath()
+var monde = "Test"
 
-	err := os.Remove("../data/Begin.png")
-	if err != nil {
-		fmt.Println(err)
+func main() {
+	m := matrice.NewGrid(10)
+	if _, err := os.Stat("../data/" + monde + ".gif"); err != nil {
+		err := os.Remove("../data/" + monde + ".gif")
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
-	f, err := os.Create("../data/Begin.png")
+	createGIF(&m)
+}
+
+func createGIF(m *matrice.Matrice) {
+	var images []*image.Paletted
+	var delays []int
+
+	delays = append(delays, 0)
+	photo := m.Photo()
+	images = append(images, photo)
+	m.Breath()
+	photo = m.Photo()
+	images = append(images, photo)
+
+	f, err := os.Create("../data/" + monde + ".gif")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -29,9 +44,11 @@ func main() {
 	w := bufio.NewWriter(f)
 	defer w.Flush()
 
-	err = png.Encode(w, photo.SubImage(photo.Rect))
+	err = gif.EncodeAll(w, &gif.GIF{
+		Image: images,
+		Delay: delays,
+	})
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }

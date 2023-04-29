@@ -44,50 +44,53 @@ func NewGrid(length int) Matrice {
 			} else {
 				blob = *matrice.grid[i][j]
 			}
-			if i > 0 {
-				newNeighbor(i-1, j, Up, &blob.Up)
-				if j > 0 {
-					newNeighbor(i-1, j-1, UpLeft, &blob.UpLeft)
-				}
-				if j < length {
-					newNeighbor(i-1, j+1, UpRight, &blob.UpRight)
-				}
-			}
-			if j > 0 {
-				newNeighbor(i, j-1, Left, &blob.Left)
-				if i < length {
-					newNeighbor(i+1, j-1, DownLeft, &blob.DownLeft)
-				}
-			}
-			if i < length {
-				newNeighbor(i+1, j, Down, &blob.Down)
-				if j < length {
-					newNeighbor(i+1, j+1, DownRight, &blob.DownRight)
-				}
-			}
-			if j < length {
-				newNeighbor(i, j+1, Right, &blob.Right)
-			}
+			newNeighbor(mod((i-1), length), mod(j, length), Left, &blob.Left)
+			newNeighbor(mod((i-1), length), mod((j-1), length), UpLeft, &blob.UpLeft)
+			newNeighbor(mod((i-1), length), mod((j+1), length), DownLeft, &blob.DownLeft)
+			newNeighbor(mod(i, length), mod((j-1), length), Up, &blob.Up)
+			newNeighbor(mod((i+1), length), mod((j-1), length), UpRight, &blob.UpRight)
+			newNeighbor(mod((i+1), length), mod(j, length), Right, &blob.Right)
+			newNeighbor(mod((i+1), length), mod((j+1), length), DownRight, &blob.DownRight)
+			newNeighbor(mod(i, length), mod((j+1), length), Down, &blob.Down)
 		}
 	}
 	return matrice
+}
+
+func mod(a, b int) int {
+	return (a%b + b) % b
 }
 
 func (m Matrice) Breath() {
 	var wg sync.WaitGroup
 	for _, cellColumn := range m.grid {
 		for _, cell := range cellColumn {
-			wg.Add(1)
-			go cell.Live()
+			go cell.Live(&wg)
 		}
 	}
-	
-} 
 
-func (m Matrice) Photo() *image.NRGBA {
+	wg.Wait()
+}
+
+func (m Matrice) Alive() bool {
+	for _, cellColumn := range m.grid {
+		for _, cell := range cellColumn {
+			if cell.Status {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (m Matrice) Photo() *image.Paletted {
+	var palette = []color.Color{
+		color.RGBA{uint8(255), uint8(255), uint8(255), uint8(255)},
+		color.RGBA{uint8(0), uint8(0), uint8(0), uint8(255)},
+	}
 	topLeft := image.Point{0, 0}
 	bottomRight := image.Point{len(m.grid), len(m.grid)}
-	photo := image.NewNRGBA(image.Rectangle{topLeft, bottomRight})
+	photo := image.NewPaletted(image.Rectangle{topLeft, bottomRight}, palette)
 	for col, cellColumn := range m.grid {
 		for row, cell := range cellColumn {
 			if cell.Status {
@@ -113,21 +116,29 @@ func newNeighbor(column, row int, side Neighbors, membrane *cell.Membrane) {
 func neighborsMembrane(cell cell.Cell, membrane *cell.Membrane, side Neighbors) {
 	switch side {
 	case Up:
-		cell.Down = *membrane
+		cell.Down.In = membrane.Out
+		cell.Down.Out = membrane.In
 	case UpLeft:
-		cell.DownRight = *membrane
+		cell.DownRight.In = membrane.Out
+		cell.DownRight.Out = membrane.In
 	case Left:
-		cell.Right = *membrane
+		cell.Right.In = membrane.Out
+		cell.Right.Out = membrane.In
 	case DownLeft:
-		cell.UpRight = *membrane
+		cell.UpRight.In = membrane.Out
+		cell.UpRight.Out = membrane.In
 	case Down:
-		cell.Up = *membrane
+		cell.Up.In = membrane.Out
+		cell.Up.Out = membrane.In
 	case DownRight:
-		cell.UpLeft = *membrane
+		cell.UpLeft.In = membrane.Out
+		cell.UpLeft.Out = membrane.In
 	case Right:
-		cell.Left = *membrane
+		cell.Left.In = membrane.Out
+		cell.Left.Out = membrane.In
 	case UpRight:
-		cell.DownLeft = *membrane
+		cell.DownLeft.In = membrane.Out
+		cell.DownLeft.Out = membrane.In
 	}
 }
 
