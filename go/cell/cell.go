@@ -32,7 +32,7 @@ func NewCell(status bool) Cell {
 }
 
 func (c *Cell) Live(wg *sync.WaitGroup) {
-	wg.Add(1)
+	defer wg.Done()
 	c.Up.Out <- c.Status
 	c.UpLeft.Out <- c.Status
 	c.Left.Out <- c.Status
@@ -52,6 +52,7 @@ func (c *Cell) Live(wg *sync.WaitGroup) {
 	neighbors += isAlive(<-c.Right.In)
 	neighbors += isAlive(<-c.UpRight.In)
 	fmt.Println("Calculating Status")
+	// c.Status = randomStatus()
 	if 1 < neighbors && neighbors < 4 && c.Status {
 		c.Status = true
 	} else if neighbors > 4 {
@@ -60,6 +61,10 @@ func (c *Cell) Live(wg *sync.WaitGroup) {
 		c.Status = false
 	}
 }
+
+// func randomStatus() bool {
+// 	return rand.Intn(100) < 10
+// }
 
 func isAlive(b bool) int {
 	if b {

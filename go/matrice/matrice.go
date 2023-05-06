@@ -62,10 +62,11 @@ func mod(a, b int) int {
 }
 
 func (m Matrice) Breath() {
-	var wg sync.WaitGroup
+	wg := new(sync.WaitGroup)
 	for _, cellColumn := range m.grid {
 		for _, cell := range cellColumn {
-			go cell.Live(&wg)
+			wg.Add(1)
+			go cell.Live(wg)
 		}
 	}
 
