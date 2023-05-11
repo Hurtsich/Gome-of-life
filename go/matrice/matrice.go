@@ -44,17 +44,72 @@ func NewGrid(length int) Matrice {
 			} else {
 				blob = *matrice.grid[i][j]
 			}
-			newNeighbor(mod((i-1), length), mod(j, length), Left, &blob.Left)
-			newNeighbor(mod((i-1), length), mod((j-1), length), UpLeft, &blob.UpLeft)
-			newNeighbor(mod((i-1), length), mod((j+1), length), DownLeft, &blob.DownLeft)
-			newNeighbor(mod(i, length), mod((j-1), length), Up, &blob.Up)
-			newNeighbor(mod((i+1), length), mod((j-1), length), UpRight, &blob.UpRight)
-			newNeighbor(mod((i+1), length), mod(j, length), Right, &blob.Right)
-			newNeighbor(mod((i+1), length), mod((j+1), length), DownRight, &blob.DownRight)
-			newNeighbor(mod(i, length), mod((j+1), length), Down, &blob.Down)
+			newNeighbor(mod((i-1), length), mod(j, length), Left, blob.Left)
+			newNeighbor(mod((i-1), length), mod((j-1), length), UpLeft, blob.UpLeft)
+			newNeighbor(mod((i-1), length), mod((j+1), length), DownLeft, blob.DownLeft)
+			newNeighbor(mod(i, length), mod((j-1), length), Up, blob.Up)
+			newNeighbor(mod((i+1), length), mod((j-1), length), UpRight, blob.UpRight)
+			newNeighbor(mod((i+1), length), mod(j, length), Right, blob.Right)
+			newNeighbor(mod((i+1), length), mod((j+1), length), DownRight, blob.DownRight)
+			newNeighbor(mod(i, length), mod((j+1), length), Down,  blob.Down)
 		}
 	}
+
+	//matrice.grid[0][0].Right.Out = matrice.grid[1][0].Left.In
+
+	//fmt.Println(matrice.grid[0][0].Right.Out == matrice.grid[1][0].Left.In)
+	//fmt.Println(matrice.grid[0][0].Left.Out == matrice.grid[0][1].Right.In)
+	//fmt.Println(matrice.grid[0][0].Up.Out == matrice.grid[0][1].Down.In)
+	//fmt.Println(matrice.grid[0][0].Down.Out == matrice.grid[0][1].Up.In)
+	//fmt.Println(matrice.grid[0][0].UpLeft.Out == matrice.grid[0][1].DownRight.In)
+	//fmt.Println(matrice.grid[0][0].UpRight.Out == matrice.grid[0][1].DownLeft.In)
+	//fmt.Println(matrice.grid[0][0].DownLeft.Out == matrice.grid[0][1].UpRight.In)
+	//fmt.Println(matrice.grid[0][0].DownRight.Out == matrice.grid[0][1].UpLeft.In)
+
 	return matrice
+}
+
+func newNeighbor(column, row int, side Neighbors, membrane cell.Membrane) {
+	if matrice.grid[column][row] == nil {
+		blob := cell.NewCell(randomStatus())
+		matrice.grid[column][row] = &blob
+		neighborsMembrane(blob, membrane, side)
+	} else {
+		neighborsMembrane(*matrice.grid[column][row], membrane, side)
+	}
+}
+
+func neighborsMembrane(cell cell.Cell, membrane cell.Membrane, side Neighbors) {
+	switch side {
+	case Up:
+		cell.Down.In = membrane.Out
+		cell.Down.Out = membrane.In
+	case UpLeft:
+		cell.DownRight.In = membrane.Out
+		cell.DownRight.Out = membrane.In
+	case Left:
+		cell.Right.In = membrane.Out
+		cell.Right.Out = membrane.In
+	case DownLeft:
+		cell.UpRight.In = membrane.Out
+		cell.UpRight.Out = membrane.In
+	case Down:
+		cell.Up.In = membrane.Out
+		cell.Up.Out = membrane.In
+	case DownRight:
+		cell.UpLeft.In = membrane.Out
+		cell.UpLeft.Out = membrane.In
+	case Right:
+		cell.Left.In = membrane.Out
+		cell.Left.Out = membrane.In
+	case UpRight:
+		cell.DownLeft.In = membrane.Out
+		cell.DownLeft.Out = membrane.In
+	}
+}
+
+func randomStatus() bool {
+	return rand.Intn(100) < 10
 }
 
 func mod(a, b int) int {
@@ -102,47 +157,4 @@ func (m Matrice) Photo() *image.Paletted {
 		}
 	}
 	return photo
-}
-
-func newNeighbor(column, row int, side Neighbors, membrane *cell.Membrane) {
-	if matrice.grid[column][row] == nil {
-		blob := cell.NewCell(randomStatus())
-		matrice.grid[column][row] = &blob
-		neighborsMembrane(blob, membrane, side)
-	} else {
-		neighborsMembrane(*matrice.grid[column][row], membrane, side)
-	}
-}
-
-func neighborsMembrane(cell cell.Cell, membrane *cell.Membrane, side Neighbors) {
-	switch side {
-	case Up:
-		cell.Down.In = membrane.Out
-		cell.Down.Out = membrane.In
-	case UpLeft:
-		cell.DownRight.In = membrane.Out
-		cell.DownRight.Out = membrane.In
-	case Left:
-		cell.Right.In = membrane.Out
-		cell.Right.Out = membrane.In
-	case DownLeft:
-		cell.UpRight.In = membrane.Out
-		cell.UpRight.Out = membrane.In
-	case Down:
-		cell.Up.In = membrane.Out
-		cell.Up.Out = membrane.In
-	case DownRight:
-		cell.UpLeft.In = membrane.Out
-		cell.UpLeft.Out = membrane.In
-	case Right:
-		cell.Left.In = membrane.Out
-		cell.Left.Out = membrane.In
-	case UpRight:
-		cell.DownLeft.In = membrane.Out
-		cell.DownLeft.Out = membrane.In
-	}
-}
-
-func randomStatus() bool {
-	return rand.Intn(100) < 10
 }

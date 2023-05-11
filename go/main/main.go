@@ -35,10 +35,6 @@ func createGIF(m *matrice.Matrice) {
 	delays = append(delays, 0)
 	photo = m.Photo()
 	images = append(images, photo)
-	m.Breath()
-	delays = append(delays, 0)
-	photo = m.Photo()
-	images = append(images, photo)
 
 	f, err := os.Create("../data/" + monde + ".gif")
 	if err != nil {
