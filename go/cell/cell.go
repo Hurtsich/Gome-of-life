@@ -1,7 +1,6 @@
 package cell
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -41,25 +40,15 @@ func (c *Cell) Live(wg *sync.WaitGroup) {
 	c.DownRight.Out <- c.Status
 	c.Right.Out <- c.Status
 	c.UpRight.Out <- c.Status
-	fmt.Println("Status OUT")
 	neighbors := 0
-	fmt.Println("UP IN")
 	neighbors += isAlive(<-c.Up.In)
-	fmt.Println("UPLEFT IN")
 	neighbors += isAlive(<-c.UpLeft.In)
-	fmt.Println("LEFT IN")
 	neighbors += isAlive(<-c.Left.In)
-	fmt.Println("DOWNLEFT IN")
 	neighbors += isAlive(<-c.DownLeft.In)
-	fmt.Println("DOWN IN")
 	neighbors += isAlive(<-c.Down.In)
-	fmt.Println("DOWNRIGHT IN")
 	neighbors += isAlive(<-c.DownRight.In)
-	fmt.Println("RIGHT IN")
 	neighbors += isAlive(<-c.Right.In)
-	fmt.Println("UPRIGHT IN")
 	neighbors += isAlive(<-c.UpRight.In)
-	fmt.Println("Calculating Status")
 	// c.Status = randomStatus()
 	if 1 < neighbors && neighbors < 4 && c.Status {
 		c.Status = true

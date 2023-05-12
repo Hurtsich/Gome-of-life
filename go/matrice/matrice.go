@@ -3,7 +3,6 @@ package matrice
 import (
 	"image"
 	"image/color"
-	"math/rand"
 	"sync"
 
 	"github.com/Hurtsich/Gome-of-life/go/cell"
@@ -14,7 +13,9 @@ type Matrice struct {
 }
 
 var (
-	matrice Matrice
+	matrice       Matrice
+	currentRow    int
+	currentColumn int
 )
 
 type Neighbors int
@@ -35,14 +36,18 @@ func NewGrid(length int) Matrice {
 	for i := range matrice.grid {
 		matrice.grid[i] = make([]*cell.Cell, length)
 	}
-	for i := 0; i < length-1; i++ {
-		for j := 0; j < length-1; j++ {
+	for i := 0; i <= length-1; i++ {
+		for j := 0; j <= length-1; j++ {
+			currentColumn = i
+			currentRow = j
 			var blob cell.Cell
 			if matrice.grid[i][j] == nil {
 				blob = cell.NewCell(randomStatus())
 				matrice.grid[i][j] = &blob
 			} else {
 				blob = *matrice.grid[i][j]
+				currentColumn = i
+				currentRow = j
 			}
 			newNeighbor(mod((i-1), length), mod(j, length), Left, blob.Left)
 			newNeighbor(mod((i-1), length), mod((j-1), length), UpLeft, blob.UpLeft)
@@ -51,35 +56,27 @@ func NewGrid(length int) Matrice {
 			newNeighbor(mod((i+1), length), mod((j-1), length), UpRight, blob.UpRight)
 			newNeighbor(mod((i+1), length), mod(j, length), Right, blob.Right)
 			newNeighbor(mod((i+1), length), mod((j+1), length), DownRight, blob.DownRight)
-			newNeighbor(mod(i, length), mod((j+1), length), Down,  blob.Down)
+			newNeighbor(mod(i, length), mod((j+1), length), Down, blob.Down)
 		}
 	}
-
-	//matrice.grid[0][0].Right.Out = matrice.grid[1][0].Left.In
-
-	//fmt.Println(matrice.grid[0][0].Right.Out == matrice.grid[1][0].Left.In)
-	//fmt.Println(matrice.grid[0][0].Left.Out == matrice.grid[0][1].Right.In)
-	//fmt.Println(matrice.grid[0][0].Up.Out == matrice.grid[0][1].Down.In)
-	//fmt.Println(matrice.grid[0][0].Down.Out == matrice.grid[0][1].Up.In)
-	//fmt.Println(matrice.grid[0][0].UpLeft.Out == matrice.grid[0][1].DownRight.In)
-	//fmt.Println(matrice.grid[0][0].UpRight.Out == matrice.grid[0][1].DownLeft.In)
-	//fmt.Println(matrice.grid[0][0].DownLeft.Out == matrice.grid[0][1].UpRight.In)
-	//fmt.Println(matrice.grid[0][0].DownRight.Out == matrice.grid[0][1].UpLeft.In)
 
 	return matrice
 }
 
 func newNeighbor(column, row int, side Neighbors, membrane cell.Membrane) {
 	if matrice.grid[column][row] == nil {
+		currentColumn = column
+		currentRow = row
 		blob := cell.NewCell(randomStatus())
 		matrice.grid[column][row] = &blob
-		neighborsMembrane(blob, membrane, side)
+		neighborsMembrane(&blob, membrane, side)
 	} else {
-		neighborsMembrane(*matrice.grid[column][row], membrane, side)
+		blob := matrice.grid[column][row]
+		neighborsMembrane(blob, membrane, side)
 	}
 }
 
-func neighborsMembrane(cell cell.Cell, membrane cell.Membrane, side Neighbors) {
+func neighborsMembrane(cell *cell.Cell, membrane cell.Membrane, side Neighbors) {
 	switch side {
 	case Up:
 		cell.Down.In = membrane.Out
@@ -109,7 +106,16 @@ func neighborsMembrane(cell cell.Cell, membrane cell.Membrane, side Neighbors) {
 }
 
 func randomStatus() bool {
-	return rand.Intn(100) < 10
+	if currentColumn == 2 && currentRow < 3 {
+		return true
+	}
+	if currentColumn == 0 && currentRow == 1 {
+		return true
+	}
+	if currentColumn == 1 && currentRow == 2 {
+		return true
+	}
+	return false
 }
 
 func mod(a, b int) int {

@@ -13,8 +13,8 @@ import (
 var monde = "Test"
 
 func main() {
-	m := matrice.NewGrid(2)
-	if _, err := os.Stat("../data/" + monde + ".gif"); err != nil {
+	m := matrice.NewGrid(100)
+	if _, err := os.Stat("../data/" + monde + ".gif"); err == nil {
 		err := os.Remove("../data/" + monde + ".gif")
 		if err != nil {
 			fmt.Println(err)
@@ -28,13 +28,12 @@ func createGIF(m *matrice.Matrice) {
 	var images []*image.Paletted
 	var delays []int
 
-	delays = append(delays, 0)
-	photo := m.Photo()
-	images = append(images, photo)
-	m.Breath()
-	delays = append(delays, 0)
-	photo = m.Photo()
-	images = append(images, photo)
+	for i := 0; i < 1; i++ {
+		delays = append(delays, 0)
+		photo := m.Photo()
+		images = append(images, photo)
+		m.Breath()
+	}
 
 	f, err := os.Create("../data/" + monde + ".gif")
 	if err != nil {
