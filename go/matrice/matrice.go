@@ -3,6 +3,7 @@ package matrice
 import (
 	"image"
 	"image/color"
+	"math/rand"
 	"sync"
 
 	"github.com/Hurtsich/Gome-of-life/go/cell"
@@ -38,8 +39,8 @@ func NewGrid(length int) Matrice {
 	}
 	for i := 0; i <= length-1; i++ {
 		for j := 0; j <= length-1; j++ {
-			currentColumn = i
-			currentRow = j
+			currentRow = i
+			currentColumn = j
 			var blob cell.Cell
 			if matrice.grid[i][j] == nil {
 				blob = cell.NewCell(randomStatus())
@@ -65,8 +66,8 @@ func NewGrid(length int) Matrice {
 
 func newNeighbor(column, row int, side Neighbors, membrane cell.Membrane) {
 	if matrice.grid[column][row] == nil {
-		currentColumn = column
-		currentRow = row
+		currentRow = column
+		currentColumn = row
 		blob := cell.NewCell(randomStatus())
 		matrice.grid[column][row] = &blob
 		neighborsMembrane(&blob, membrane, side)
@@ -106,16 +107,16 @@ func neighborsMembrane(cell *cell.Cell, membrane cell.Membrane, side Neighbors) 
 }
 
 func randomStatus() bool {
-	if currentColumn == 2 && currentRow < 3 {
-		return true
-	}
-	if currentColumn == 0 && currentRow == 1 {
-		return true
-	}
-	if currentColumn == 1 && currentRow == 2 {
-		return true
-	}
-	return false
+	// if currentColumn == 2 && currentRow < 3 {
+	// 	return true
+	// }
+	// if currentColumn == 0 && currentRow == 1 {
+	// 	return true
+	// }
+	// if currentColumn == 1 && currentRow == 2 {
+	// 	return true
+	// }
+	return rand.Intn(100) <= 40
 }
 
 func mod(a, b int) int {
@@ -143,6 +144,14 @@ func (m Matrice) Alive() bool {
 		}
 	}
 	return false
+}
+
+func (m Matrice) BigBang() {
+	for _, cellColumn := range m.grid {
+		for _, cell := range cellColumn {
+			cell.Talk()
+		}
+	}
 }
 
 func (m Matrice) Photo() *image.Paletted {

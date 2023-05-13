@@ -32,14 +32,18 @@ func NewCell(status bool) Cell {
 
 func (c *Cell) Live(wg *sync.WaitGroup) {
 	defer wg.Done()
-	c.Up.Out <- c.Status
-	c.UpLeft.Out <- c.Status
-	c.Left.Out <- c.Status
-	c.DownLeft.Out <- c.Status
-	c.Down.Out <- c.Status
-	c.DownRight.Out <- c.Status
-	c.Right.Out <- c.Status
-	c.UpRight.Out <- c.Status
+	neighbors := c.Listen()
+	if (neighbors == 2 || neighbors == 3) && c.Status {
+		c.Status = true
+	} else if neighbors == 3 && !c.Status {
+		c.Status = true
+	} else {
+		c.Status = false
+	}
+	c.Talk()
+}
+
+func (c *Cell) Listen() int {
 	neighbors := 0
 	neighbors += isAlive(<-c.Up.In)
 	neighbors += isAlive(<-c.UpLeft.In)
@@ -49,19 +53,19 @@ func (c *Cell) Live(wg *sync.WaitGroup) {
 	neighbors += isAlive(<-c.DownRight.In)
 	neighbors += isAlive(<-c.Right.In)
 	neighbors += isAlive(<-c.UpRight.In)
-	// c.Status = randomStatus()
-	if 1 < neighbors && neighbors < 4 && c.Status {
-		c.Status = true
-	} else if neighbors > 4 {
-		c.Status = true
-	} else {
-		c.Status = false
-	}
+	return neighbors
 }
 
-// func randomStatus() bool {
-// 	return rand.Intn(100) < 10
-// }
+func (c *Cell) Talk() {
+	c.Up.Out <- c.Status
+	c.UpLeft.Out <- c.Status
+	c.Left.Out <- c.Status
+	c.DownLeft.Out <- c.Status
+	c.Down.Out <- c.Status
+	c.DownRight.Out <- c.Status
+	c.Right.Out <- c.Status
+	c.UpRight.Out <- c.Status
+}
 
 func isAlive(b bool) int {
 	if b {
