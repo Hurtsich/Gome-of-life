@@ -1,6 +1,7 @@
 package matrice
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math/rand"
@@ -14,9 +15,8 @@ type Matrice struct {
 }
 
 var (
-	matrice       Matrice
-	currentRow    int
-	currentColumn int
+	matrice Matrice
+	logo    image.Image
 )
 
 type Neighbors int
@@ -39,16 +39,12 @@ func NewGrid(length int) Matrice {
 	}
 	for i := 0; i <= length-1; i++ {
 		for j := 0; j <= length-1; j++ {
-			currentRow = i
-			currentColumn = j
 			var blob cell.Cell
 			if matrice.grid[i][j] == nil {
 				blob = cell.NewCell(randomStatus())
 				matrice.grid[i][j] = &blob
 			} else {
 				blob = *matrice.grid[i][j]
-				currentColumn = i
-				currentRow = j
 			}
 			newNeighbor(mod((i-1), length), mod(j, length), Left, blob.Left)
 			newNeighbor(mod((i-1), length), mod((j-1), length), UpLeft, blob.UpLeft)
@@ -64,11 +60,48 @@ func NewGrid(length int) Matrice {
 	return matrice
 }
 
+func NewGridFromImage(image image.Image) Matrice {
+	logo = image
+	width := image.Bounds().Max.X
+	height := image.Bounds().Max.Y
+	fmt.Println("World creation...")
+	matrice = Matrice{grid: make([][]*cell.Cell, height)}
+	for i := range matrice.grid {
+		matrice.grid[i] = make([]*cell.Cell, width)
+	}
+
+	for i := 0; i < height; i++ {
+		for j := 0; j < width; j++ {
+			var blob cell.Cell
+			if matrice.grid[i][j] == nil {
+				blob = cell.NewCell(statusByColor(image.At(j, i)))
+				matrice.grid[i][j] = &blob
+			} else {
+				blob = *matrice.grid[i][j]
+			}
+			newNeighbor(mod((i-1), height), mod(j, width), Left, blob.Left)
+			newNeighbor(mod((i-1), height), mod((j-1), width), UpLeft, blob.UpLeft)
+			newNeighbor(mod((i-1), height), mod((j+1), width), DownLeft, blob.DownLeft)
+			newNeighbor(mod(i, height), mod((j-1), width), Up, blob.Up)
+			newNeighbor(mod((i+1), height), mod((j-1), width), UpRight, blob.UpRight)
+			newNeighbor(mod((i+1), height), mod(j, width), Right, blob.Right)
+			newNeighbor(mod((i+1), height), mod((j+1), width), DownRight, blob.DownRight)
+			newNeighbor(mod(i, height), mod((j+1), width), Down, blob.Down)
+		}
+		fmt.Println("...")
+	}
+	return matrice
+}
+
+func statusByColor(pixel color.Color) bool {
+	blanc := color.NRGBA{uint8(255), uint8(255), uint8(255), uint8(255)}
+	result := pixel != blanc
+	return result
+}
+
 func newNeighbor(column, row int, side Neighbors, membrane cell.Membrane) {
 	if matrice.grid[column][row] == nil {
-		currentRow = column
-		currentColumn = row
-		blob := cell.NewCell(randomStatus())
+		blob := cell.NewCell(statusByColor(logo.At(row, column)))
 		matrice.grid[column][row] = &blob
 		neighborsMembrane(&blob, membrane, side)
 	} else {
@@ -160,7 +193,7 @@ func (m Matrice) Photo() *image.Paletted {
 		color.RGBA{uint8(0), uint8(0), uint8(0), uint8(255)},
 	}
 	topLeft := image.Point{0, 0}
-	bottomRight := image.Point{len(m.grid), len(m.grid)}
+	bottomRight := image.Point{len(m.grid[0]), len(m.grid)}
 	photo := image.NewPaletted(image.Rectangle{topLeft, bottomRight}, palette)
 	for col, cellColumn := range m.grid {
 		for row, cell := range cellColumn {

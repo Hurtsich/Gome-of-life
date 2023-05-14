@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/gif"
+	"image/png"
 	"os"
 
 	"github.com/Hurtsich/Gome-of-life/go/matrice"
@@ -13,14 +14,20 @@ import (
 var monde = "Test"
 
 func main() {
-	m := matrice.NewGrid(500)
+	// m := matrice.NewGrid(500)
+	i, err := getImageFromFilePath("../data/logo.png")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	m := matrice.NewGridFromImage(i)
 	if _, err := os.Stat("../data/" + monde + ".gif"); err == nil {
 		err := os.Remove("../data/" + monde + ".gif")
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
-
+	fmt.Println("Big BANG !!")
 	m.BigBang()
 
 	createGIF(&m)
@@ -31,10 +38,14 @@ func createGIF(m *matrice.Matrice) {
 	var delays []int
 
 	for i := 0; i < 1000; i++ {
+		fmt.Printf("Year: %v", i)
 		delays = append(delays, 0)
 		photo := m.Photo()
 		images = append(images, photo)
-		m.Breath()
+		if i > 10 {
+			m.Breath()
+		}
+		fmt.Println()
 	}
 
 	f, err := os.Create("../data/" + monde + ".gif")
@@ -53,4 +64,13 @@ func createGIF(m *matrice.Matrice) {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+func getImageFromFilePath(filePath string) (image.Image, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return png.Decode(f)
 }
