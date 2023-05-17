@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math/rand"
+	"image/png"
+	"os"
 	"sync"
 
 	"github.com/Hurtsich/Gome-of-life/go/cell"
@@ -55,8 +56,16 @@ func NewGrid(length int) Matrice {
 			newNeighbor(mod((i+1), length), mod((j+1), length), DownRight, blob.DownRight)
 			newNeighbor(mod(i, length), mod((j+1), length), Down, blob.Down)
 		}
+		fmt.Println("...")
 	}
-
+	addGosperGliderGun(&matrice, image.Point{
+		X: 10,
+		Y: 10,
+	})
+	addImageAt(&matrice, image.Point{
+		X: 49,
+		Y: 49,
+	})
 	return matrice
 }
 
@@ -93,6 +102,33 @@ func NewGridFromImage(image image.Image) Matrice {
 	return matrice
 }
 
+func addImageAt(m *Matrice, start image.Point) {
+	image, err := getImageFromFilePath("../data/Slide.png")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	width := len(m.grid)
+	height := len(m.grid)
+
+	for i := 0; i < height; i++ {
+		for j := 0; j < width; j++ {
+			if i >= start.Y && j >= start.X {
+				m.grid[i][j].Status = statusByColor(image.At(j-start.X, i-start.Y))
+			}
+		}
+	}
+}
+
+func getImageFromFilePath(filePath string) (image.Image, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return png.Decode(f)
+}
+
 func statusByColor(pixel color.Color) bool {
 	blanc := color.NRGBA{uint8(255), uint8(255), uint8(255), uint8(255)}
 	result := pixel != blanc
@@ -101,7 +137,7 @@ func statusByColor(pixel color.Color) bool {
 
 func newNeighbor(column, row int, side Neighbors, membrane cell.Membrane) {
 	if matrice.grid[column][row] == nil {
-		blob := cell.NewCell(statusByColor(logo.At(row, column)))
+		blob := cell.NewCell(randomStatus())
 		matrice.grid[column][row] = &blob
 		neighborsMembrane(&blob, membrane, side)
 	} else {
@@ -149,19 +185,44 @@ func randomStatus() bool {
 	// if currentColumn == 1 && currentRow == 2 {
 	// 	return true
 	// }
-	return rand.Intn(100) <= 40
+	// rand.Intn(100) <= 25
+	return false
+}
+
+func addGosperGliderGun(matrix *Matrice, start image.Point) {
+	matrix.grid[start.X+5][start.Y+1].Status, matrix.grid[start.X+5][start.Y+2].Status = true, true
+	matrix.grid[start.X+6][start.Y+1].Status, matrix.grid[start.X+6][start.Y+2].Status = true, true
+	matrix.grid[start.X+3][start.Y+13].Status, matrix.grid[start.X+3][start.Y+14].Status = true, true
+	matrix.grid[start.X+4][start.Y+12].Status, matrix.grid[start.X+4][start.Y+16].Status = true, true
+	matrix.grid[start.X+5][start.Y+11].Status, matrix.grid[start.X+5][start.Y+17].Status = true, true
+	matrix.grid[start.X+6][start.Y+11].Status, matrix.grid[start.X+6][start.Y+15].Status = true, true
+	matrix.grid[start.X+6][start.Y+17].Status, matrix.grid[start.X+6][start.Y+18].Status = true, true
+	matrix.grid[start.X+7][start.Y+11].Status, matrix.grid[start.X+7][start.Y+17].Status = true, true
+	matrix.grid[start.X+8][start.Y+12].Status, matrix.grid[start.X+8][start.Y+16].Status = true, true
+	matrix.grid[start.X+9][start.Y+13].Status, matrix.grid[start.X+9][start.Y+14].Status = true, true
+	matrix.grid[start.X+1][start.Y+25].Status = true
+	matrix.grid[start.X+2][start.Y+23].Status, matrix.grid[start.X+2][start.Y+25].Status = true, true
+	matrix.grid[start.X+3][start.Y+21].Status, matrix.grid[start.X+3][start.Y+22].Status = true, true
+	matrix.grid[start.X+4][start.Y+21].Status, matrix.grid[start.X+4][start.Y+22].Status = true, true
+	matrix.grid[start.X+5][start.Y+21].Status, matrix.grid[start.X+5][start.Y+22].Status = true, true
+	matrix.grid[start.X+6][start.Y+23].Status, matrix.grid[start.X+6][start.Y+25].Status = true, true
+	matrix.grid[start.X+7][start.Y+25].Status = true
+	matrix.grid[start.X+3][start.Y+35].Status = true
+	matrix.grid[start.X+3][start.Y+36].Status = true
+	matrix.grid[start.X+4][start.Y+35].Status = true
+	matrix.grid[start.X+4][start.Y+36].Status = true
 }
 
 func mod(a, b int) int {
 	return (a%b + b) % b
 }
 
-func (m Matrice) Breath() {
+func (m Matrice) Breath(deadzone image.Point) {
 	wg := new(sync.WaitGroup)
-	for _, cellColumn := range m.grid {
-		for _, cell := range cellColumn {
+	for y, cellColumn := range m.grid {
+		for x, cell := range cellColumn {
 			wg.Add(1)
-			go cell.Live(wg)
+			go cell.Live(wg, y <= deadzone.Y || x <= deadzone.X)
 		}
 	}
 

@@ -30,29 +30,31 @@ func NewCell(status bool) Cell {
 	}
 }
 
-func (c *Cell) Live(wg *sync.WaitGroup) {
+func (c *Cell) Live(wg *sync.WaitGroup, notInDeadZone bool) {
 	defer wg.Done()
 	neighbors := c.Listen()
-	if (neighbors == 2 || neighbors == 3) && c.Status {
-		c.Status = true
-	} else if neighbors == 3 && !c.Status {
-		c.Status = true
-	} else {
-		c.Status = false
+	if notInDeadZone {
+		if (neighbors == 2 || neighbors == 3) && c.Status {
+			c.Status = true
+		} else if neighbors == 3 && !c.Status {
+			c.Status = true
+		} else {
+			c.Status = false
+		}
 	}
 	c.Talk()
 }
 
 func (c *Cell) Listen() int {
 	neighbors := 0
-	neighbors += isAlive(<-c.Up.In)
-	neighbors += isAlive(<-c.UpLeft.In)
-	neighbors += isAlive(<-c.Left.In)
-	neighbors += isAlive(<-c.DownLeft.In)
-	neighbors += isAlive(<-c.Down.In)
-	neighbors += isAlive(<-c.DownRight.In)
-	neighbors += isAlive(<-c.Right.In)
-	neighbors += isAlive(<-c.UpRight.In)
+	neighbors += isAlive(c.Up.In)
+	neighbors += isAlive(c.UpLeft.In)
+	neighbors += isAlive(c.Left.In)
+	neighbors += isAlive(c.DownLeft.In)
+	neighbors += isAlive(c.Down.In)
+	neighbors += isAlive(c.DownRight.In)
+	neighbors += isAlive(c.Right.In)
+	neighbors += isAlive(c.UpRight.In)
 	return neighbors
 }
 
@@ -67,9 +69,15 @@ func (c *Cell) Talk() {
 	c.UpRight.Out <- c.Status
 }
 
-func isAlive(b bool) int {
-	if b {
-		return 1
+func isAlive(b chan bool) int {
+	select {
+	case alive := <-b:
+		if alive {
+			return 1
+		} else {
+			return 0
+		}
+	default:
+		return 0
 	}
-	return 0
 }
