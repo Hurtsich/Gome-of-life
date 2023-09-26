@@ -1,11 +1,9 @@
 package matrice
 
 import (
-	"fmt"
 	"image"
 	"image/color"
-	"image/png"
-	"os"
+	"math/rand"
 	"sync"
 
 	"github.com/Hurtsich/Gome-of-life/go/cell"
@@ -32,108 +30,6 @@ const (
 	Right
 	UpRight
 )
-
-func NewGrid(length int) Matrice {
-	matrice = Matrice{grid: make([][]*cell.Cell, length)}
-	for i := range matrice.grid {
-		matrice.grid[i] = make([]*cell.Cell, length)
-	}
-	for i := 0; i <= length-1; i++ {
-		for j := 0; j <= length-1; j++ {
-			var blob cell.Cell
-			if matrice.grid[i][j] == nil {
-				blob = cell.NewCell(randomStatus())
-				matrice.grid[i][j] = &blob
-			} else {
-				blob = *matrice.grid[i][j]
-			}
-			newNeighbor(mod((i-1), length), mod(j, length), Left, blob.Left)
-			newNeighbor(mod((i-1), length), mod((j-1), length), UpLeft, blob.UpLeft)
-			newNeighbor(mod((i-1), length), mod((j+1), length), DownLeft, blob.DownLeft)
-			newNeighbor(mod(i, length), mod((j-1), length), Up, blob.Up)
-			newNeighbor(mod((i+1), length), mod((j-1), length), UpRight, blob.UpRight)
-			newNeighbor(mod((i+1), length), mod(j, length), Right, blob.Right)
-			newNeighbor(mod((i+1), length), mod((j+1), length), DownRight, blob.DownRight)
-			newNeighbor(mod(i, length), mod((j+1), length), Down, blob.Down)
-		}
-		fmt.Println("...")
-	}
-	addGosperGliderGun(&matrice, image.Point{
-		X: 10,
-		Y: 10,
-	})
-	addImageAt(&matrice, image.Point{
-		X: 49,
-		Y: 49,
-	})
-	return matrice
-}
-
-func NewGridFromImage(image image.Image) Matrice {
-	logo = image
-	width := image.Bounds().Max.X
-	height := image.Bounds().Max.Y
-	fmt.Println("World creation...")
-	matrice = Matrice{grid: make([][]*cell.Cell, height)}
-	for i := range matrice.grid {
-		matrice.grid[i] = make([]*cell.Cell, width)
-	}
-
-	for i := 0; i < height; i++ {
-		for j := 0; j < width; j++ {
-			var blob cell.Cell
-			if matrice.grid[i][j] == nil {
-				blob = cell.NewCell(statusByColor(image.At(j, i)))
-				matrice.grid[i][j] = &blob
-			} else {
-				blob = *matrice.grid[i][j]
-			}
-			newNeighbor(mod((i-1), height), mod(j, width), Left, blob.Left)
-			newNeighbor(mod((i-1), height), mod((j-1), width), UpLeft, blob.UpLeft)
-			newNeighbor(mod((i-1), height), mod((j+1), width), DownLeft, blob.DownLeft)
-			newNeighbor(mod(i, height), mod((j-1), width), Up, blob.Up)
-			newNeighbor(mod((i+1), height), mod((j-1), width), UpRight, blob.UpRight)
-			newNeighbor(mod((i+1), height), mod(j, width), Right, blob.Right)
-			newNeighbor(mod((i+1), height), mod((j+1), width), DownRight, blob.DownRight)
-			newNeighbor(mod(i, height), mod((j+1), width), Down, blob.Down)
-		}
-		fmt.Println("...")
-	}
-	return matrice
-}
-
-func addImageAt(m *Matrice, start image.Point) {
-	image, err := getImageFromFilePath("../data/Slide.png")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	width := len(m.grid)
-	height := len(m.grid)
-
-	for i := 0; i < height; i++ {
-		for j := 0; j < width; j++ {
-			if i >= start.Y && j >= start.X {
-				m.grid[i][j].Status = statusByColor(image.At(j-start.X, i-start.Y))
-			}
-		}
-	}
-}
-
-func getImageFromFilePath(filePath string) (image.Image, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return png.Decode(f)
-}
-
-func statusByColor(pixel color.Color) bool {
-	blanc := color.NRGBA{uint8(255), uint8(255), uint8(255), uint8(255)}
-	result := pixel != blanc
-	return result
-}
 
 func newNeighbor(column, row int, side Neighbors, membrane cell.Membrane) {
 	if matrice.grid[column][row] == nil {
@@ -176,41 +72,7 @@ func neighborsMembrane(cell *cell.Cell, membrane cell.Membrane, side Neighbors) 
 }
 
 func randomStatus() bool {
-	// if currentColumn == 2 && currentRow < 3 {
-	// 	return true
-	// }
-	// if currentColumn == 0 && currentRow == 1 {
-	// 	return true
-	// }
-	// if currentColumn == 1 && currentRow == 2 {
-	// 	return true
-	// }
-	// rand.Intn(100) <= 25
-	return false
-}
-
-func addGosperGliderGun(matrix *Matrice, start image.Point) {
-	matrix.grid[start.X+5][start.Y+1].Status, matrix.grid[start.X+5][start.Y+2].Status = true, true
-	matrix.grid[start.X+6][start.Y+1].Status, matrix.grid[start.X+6][start.Y+2].Status = true, true
-	matrix.grid[start.X+3][start.Y+13].Status, matrix.grid[start.X+3][start.Y+14].Status = true, true
-	matrix.grid[start.X+4][start.Y+12].Status, matrix.grid[start.X+4][start.Y+16].Status = true, true
-	matrix.grid[start.X+5][start.Y+11].Status, matrix.grid[start.X+5][start.Y+17].Status = true, true
-	matrix.grid[start.X+6][start.Y+11].Status, matrix.grid[start.X+6][start.Y+15].Status = true, true
-	matrix.grid[start.X+6][start.Y+17].Status, matrix.grid[start.X+6][start.Y+18].Status = true, true
-	matrix.grid[start.X+7][start.Y+11].Status, matrix.grid[start.X+7][start.Y+17].Status = true, true
-	matrix.grid[start.X+8][start.Y+12].Status, matrix.grid[start.X+8][start.Y+16].Status = true, true
-	matrix.grid[start.X+9][start.Y+13].Status, matrix.grid[start.X+9][start.Y+14].Status = true, true
-	matrix.grid[start.X+1][start.Y+25].Status = true
-	matrix.grid[start.X+2][start.Y+23].Status, matrix.grid[start.X+2][start.Y+25].Status = true, true
-	matrix.grid[start.X+3][start.Y+21].Status, matrix.grid[start.X+3][start.Y+22].Status = true, true
-	matrix.grid[start.X+4][start.Y+21].Status, matrix.grid[start.X+4][start.Y+22].Status = true, true
-	matrix.grid[start.X+5][start.Y+21].Status, matrix.grid[start.X+5][start.Y+22].Status = true, true
-	matrix.grid[start.X+6][start.Y+23].Status, matrix.grid[start.X+6][start.Y+25].Status = true, true
-	matrix.grid[start.X+7][start.Y+25].Status = true
-	matrix.grid[start.X+3][start.Y+35].Status = true
-	matrix.grid[start.X+3][start.Y+36].Status = true
-	matrix.grid[start.X+4][start.Y+35].Status = true
-	matrix.grid[start.X+4][start.Y+36].Status = true
+	return rand.Intn(100) <= 25
 }
 
 func mod(a, b int) int {
