@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/Hurtsich/Gome-of-life/go/matrice"
-	"github.com/ichinaski/pxl"
 )
 
 var monde = "Test"
@@ -50,8 +49,6 @@ func createGIF(m *matrice.Matrice) {
 		// 	m.Breath(image.Point{X: 200, Y: 200})
 		// }
 		fmt.Println()
-
-		pxl.
 	}
 
 	f, err := os.Create("../data/" + monde + ".gif")
