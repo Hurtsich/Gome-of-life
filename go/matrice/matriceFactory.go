@@ -47,7 +47,7 @@ func NewGridFromImage(img image.Image) Matrice {
 }
 
 func addImageAt(m *Matrice, start image.Point, img image.Image) {
-	width := len(m.grid)
+	width := len(m.grid[0])
 	height := len(m.grid)
 
 	for i := 0; i < height; i++ {
