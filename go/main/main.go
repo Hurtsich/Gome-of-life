@@ -29,15 +29,11 @@ func main() {
 	// 		fmt.Println(err)
 	// 	}
 	// }
-
-	testUpscale()
-}
-
-func testUpscale() {
-	generateSlides("cellule0")
+	GenerateSlides()
 }
 
 func GenerateSlides() {
+	generateSlides("cellule0")
 	generateSlides("cellule1")
 	generateSlides("cellule2")
 	generateSlides("cellule3")
@@ -83,6 +79,7 @@ func generateSlides(slideName string) {
 	}
 	m := matrice.NewGridFromImage(i)
 	p := m.Photo()
+	pi := gimg.Upscale(p, 10)
 
 	f, err := os.Create("../data/generated-" + slideName + ".png")
 	if err != nil {
@@ -93,27 +90,10 @@ func generateSlides(slideName string) {
 	w := bufio.NewWriter(f)
 	defer w.Flush()
 
-	err = png.Encode(w, p)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	pi := gimg.Upscale(p, 8)
-
-	f, err = os.Create("../data/upscaled-" + slideName + ".png")
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer f.Close()
-
-	w = bufio.NewWriter(f)
-	defer w.Flush()
-
 	err = png.Encode(w, pi)
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 func createGIF(m *matrice.Matrice, imageName string) {
@@ -124,8 +104,9 @@ func createGIF(m *matrice.Matrice, imageName string) {
 		fmt.Printf("Year: %v", i)
 		delays = append(delays, 0)
 		photo := m.Photo()
-		images = append(images, photo)
-		m.Breath(image.Point{X: 1000, Y: 1000})
+		upPhoto := gimg.Upscale(photo, 10)
+		images = append(images, upPhoto)
+		m.Breath(image.Point{X: 2000, Y: 2000})
 
 		// if i < 320 {
 		// 	m.Breath(image.Point{X: 50, Y: 90})
