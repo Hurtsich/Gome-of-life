@@ -3,13 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	gimg "github.com/Hurtsich/Gome-of-life/go/image"
+	"github.com/Hurtsich/Gome-of-life/go/matrice"
 	"image"
 	"image/gif"
 	"image/png"
 	"os"
-
-	gimg "github.com/Hurtsich/Gome-of-life/go/image"
-	"github.com/Hurtsich/Gome-of-life/go/matrice"
 )
 
 var monde = "Test"
@@ -22,15 +21,70 @@ func main() {
 	// 	fmt.Println(err)
 	// 	return
 	// }
-	// m := matrice.NewGridFromImage(i)
-	// if _, err := os.Stat("../data/" + monde + ".gif"); err == nil {
-	// 	err := os.Remove("../data/" + monde + ".gif")
-	// 	if err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// }
-	mat := matrice.NewGridWithGliderGun(300, 200)
-	createGIF(&mat, "gliderGun")
+	//m := matrice.NewGridFromImage(i)
+	//if _, err := os.Stat("../data/" + monde + ".gif"); err == nil {
+	//	err := os.Remove("../data/" + monde + ".gif")
+	//	if err != nil {
+	//		fmt.Println(err)
+	//	}
+	//}
+	createGIFWithTransition("test")
+}
+
+func createGIFWithTransition(name string) {
+	img, err := gimg.GetImageFromFilePath("../data/b.png")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	m := matrice.NewGridFromImage(img)
+	fmt.Println("Big BANG !!")
+	m.BigBang()
+	gif1, delays1 := createGIFWithLastImage(&m)
+	generateImage(m.Photo(), "last")
+
+	i2, err := gimg.GetImageFromFilePath("../data/cellule0.png")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	m2 := matrice.NewGridFromImage(i2)
+	fmt.Println("Big BANG !!")
+	m2.BigBang()
+	gif2, delays2 := createGIFWithLastImage(&m2)
+	gif2 = reverseSort(gif2)
+
+	merger := m.GetMerger(&m2)
+
+	for m.Merge(merger) {
+		fmt.Println("Generating...")
+		delays1 = append(delays1, 7)
+		photo := m.Photo()
+		pi := gimg.Upscale(photo, 3)
+		gif1 = append(gif1, pi)
+	}
+
+	fmt.Printf("Merger Length :%d", len(merger))
+
+	gif1 = append(gif1, gif2...)
+	delays1 = append(delays1, delays2...)
+
+	f, err := os.Create("../data/" + name + ".gif")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+
+	err = gif.EncodeAll(w, &gif.GIF{
+		Image: gif1,
+		Delay: delays1,
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func GenerateSlides() {
@@ -109,17 +163,77 @@ func generateSlides(slideName string) {
 	}
 }
 
-func createGIF(m *matrice.Matrice, imageName string) {
+func generateImage(img image.Image, name string) {
+	m := matrice.NewGridFromImage(img)
+	p := m.Photo()
+
+	f, err := os.Create("../data/generated-" + name + ".png")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+
+	err = png.Encode(w, p)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func reverseSort(s []*image.Paletted) []*image.Paletted {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
+}
+
+func createGIFWithLastImage(m *matrice.Matrice) ([]*image.Paletted, []int) {
 	var images []*image.Paletted
 	var delays []int
 
-	for i := 0; i < 500; i++ {
+	for i := 0; i < 100; i++ {
 		fmt.Printf("Year: %v", i)
 		delays = append(delays, 7)
 		photo := m.Photo()
 		pi := gimg.Upscale(photo, 3)
 		images = append(images, pi)
-		m.Breath(image.Point{X: 2000, Y: 2000})
+		m.Breath(image.Point{X: 3000, Y: 2000})
+		fmt.Println()
+	}
+	return images, delays
+}
+
+func imagineGIF(m *matrice.Matrice) ([]*image.Paletted, []int) {
+	var images []*image.Paletted
+	var delays []int
+
+	for i := 0; i < 200; i++ {
+		fmt.Printf("Year: %v", i)
+		delays = append(delays, 7)
+		photo := m.Photo()
+		pi := gimg.Upscale(photo, 3)
+		images = append(images, pi)
+		m.Breath(image.Point{X: 3000, Y: 2000})
+
+		fmt.Println()
+	}
+
+	return images, delays
+}
+
+func createGIF(m *matrice.Matrice, imageName string) {
+	var images []*image.Paletted
+	var delays []int
+
+	for i := 0; i < 100; i++ {
+		fmt.Printf("Year: %v", i)
+		delays = append(delays, 7)
+		photo := m.Photo()
+		pi := gimg.Upscale(photo, 3)
+		images = append(images, pi)
+		m.Breath(image.Point{X: 3000, Y: 2000})
 
 		// if i < 320 {
 		// 	m.Breath(image.Point{X: 50, Y: 90})

@@ -1,6 +1,7 @@
 package matrice
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math/rand"
@@ -79,7 +80,7 @@ func mod(a, b int) int {
 	return (a%b + b) % b
 }
 
-func (m Matrice) Breath(deadzone image.Point) {
+func (m *Matrice) Breath(deadzone image.Point) {
 	wg := new(sync.WaitGroup)
 	for y, cellColumn := range m.grid {
 		for x, cell := range cellColumn {
@@ -91,7 +92,7 @@ func (m Matrice) Breath(deadzone image.Point) {
 	wg.Wait()
 }
 
-func (m Matrice) Alive() bool {
+func (m *Matrice) Alive() bool {
 	for _, cellColumn := range m.grid {
 		for _, cell := range cellColumn {
 			if cell.Status {
@@ -102,7 +103,7 @@ func (m Matrice) Alive() bool {
 	return false
 }
 
-func (m Matrice) BigBang() {
+func (m *Matrice) BigBang() {
 	for _, cellColumn := range m.grid {
 		for _, cell := range cellColumn {
 			cell.Talk()
@@ -110,7 +111,7 @@ func (m Matrice) BigBang() {
 	}
 }
 
-func (m Matrice) Photo() *image.Paletted {
+func (m *Matrice) Photo() *image.Paletted {
 	var palette = []color.Color{
 		color.RGBA{uint8(255), uint8(255), uint8(255), uint8(255)},
 		color.RGBA{uint8(0), uint8(0), uint8(0), uint8(255)},
@@ -128,4 +129,104 @@ func (m Matrice) Photo() *image.Paletted {
 		}
 	}
 	return photo
+}
+
+func (m *Matrice) GetMerger(target *Matrice) []Merger {
+	var moves []Merger
+	for x, rows := range m.grid {
+		fmt.Println("Parsing SourceRows")
+		for y, blob := range rows {
+			if !blob.Status {
+				continue
+			}
+			sourcePoint := image.Point{x, y}
+			var nearestPoint image.Point
+			var targetPoint image.Point
+			fmt.Printf("Get nearest point for %d, %d \n", x, y)
+			for tx, trows := range target.grid {
+				for ty, tblob := range trows {
+					if !tblob.Status {
+						continue
+					}
+					targetPoint = image.Point{tx, ty}
+					fmt.Printf("Parsing point %d, %d \n", tx, ty)
+					nearestPoint = getNearestPoint(sourcePoint, nearestPoint, targetPoint)
+				}
+			}
+			moves = append(moves, Merger{sourcePoint, nearestPoint})
+		}
+	}
+	return moves
+}
+
+func (m *Matrice) Merge(merger []Merger) bool {
+	mergLength := len(merger) - 1
+	cpt := 0
+	for _, merg := range merger {
+		if merg.sourcePoint.X == merg.targetPoint.X &&
+			merg.sourcePoint.Y == merg.targetPoint.Y {
+			fmt.Println("Same point")
+			cpt++
+			continue
+		}
+		m.grid[merg.sourcePoint.X][merg.sourcePoint.Y].Status = false
+		newX := moveX(merg.sourcePoint.X, merg.targetPoint.X)
+		newY := moveY(merg.sourcePoint.Y, merg.targetPoint.Y)
+		fmt.Printf("Moving point %d %d to %d %d \n", merg.sourcePoint.X, merg.sourcePoint.Y, newX, newY)
+		m.grid[newX][newY].Status = true
+		merg.sourcePoint = image.Point{newX, newY}
+	}
+	return cpt < mergLength
+}
+
+func moveX(sp, tp int) int {
+	if sp == tp {
+		return sp
+	}
+
+	if sp < tp {
+		return sp + 1
+	} else {
+		return sp - 1
+	}
+}
+
+func moveY(sp, tp int) int {
+	if sp == tp {
+		return sp
+	}
+
+	if sp < tp {
+		return sp + 1
+	} else {
+		return sp - 1
+	}
+}
+
+type Merger struct {
+	sourcePoint image.Point
+	targetPoint image.Point
+}
+
+func getNearestPoint(sp, np, tp image.Point) image.Point {
+	if np.X == tp.X && np.Y == tp.Y {
+		return np
+	}
+
+	distNP := getDistance(sp, np)
+	distTP := getDistance(sp, tp)
+
+	if distNP < distTP {
+		return np
+	} else {
+		return tp
+	}
+}
+
+func getDistance(sp, np image.Point) int {
+	calc := (sp.X - np.X) + (sp.Y - np.Y)
+	if calc < 0 {
+		return -calc
+	}
+	return calc
 }
