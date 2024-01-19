@@ -29,7 +29,8 @@ func main() {
 	// 		fmt.Println(err)
 	// 	}
 	// }
-	GenerateSlides()
+	mat := matrice.NewGridWithGliderGun(300, 200)
+	createGIF(&mat, "gliderGun")
 }
 
 func GenerateSlides() {
@@ -71,6 +72,18 @@ func GenerateSlides() {
 	createGIF(&m, "gol10")
 }
 
+func createGIFFromName(imgName string) {
+	i, err := gimg.GetImageFromFilePath("../data/" + imgName + ".png")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	m := matrice.NewGridFromImage(i)
+	fmt.Println("Big BANG !!")
+	m.BigBang()
+	createGIF(&m, imgName)
+}
+
 func generateSlides(slideName string) {
 	i, err := gimg.GetImageFromFilePath("../data/" + slideName + ".png")
 	if err != nil {
@@ -100,12 +113,12 @@ func createGIF(m *matrice.Matrice, imageName string) {
 	var images []*image.Paletted
 	var delays []int
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 500; i++ {
 		fmt.Printf("Year: %v", i)
-		delays = append(delays, 0)
+		delays = append(delays, 7)
 		photo := m.Photo()
-		upPhoto := gimg.Upscale(photo, 10)
-		images = append(images, upPhoto)
+		pi := gimg.Upscale(photo, 3)
+		images = append(images, pi)
 		m.Breath(image.Point{X: 2000, Y: 2000})
 
 		// if i < 320 {

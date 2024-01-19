@@ -20,7 +20,8 @@ func GetImageFromFilePath(filePath string) (image.Image, error) {
 
 func StatusByColor(pixel color.Color) bool {
 	blanc := color.NRGBA{uint8(255), uint8(255), uint8(255), uint8(255)}
-	result := pixel != blanc
+	//noir := color.RGBA{uint8(0), uint8(0), uint8(0), uint8(255)}
+	result := pixel == blanc
 	return result
 }
 

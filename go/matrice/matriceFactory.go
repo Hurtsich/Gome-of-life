@@ -17,7 +17,7 @@ func NewGrid(height, width int) Matrice {
 		for j := 0; j < width; j++ {
 			var blob cell.Cell
 			if matrice.grid[i][j] == nil {
-				blob = cell.NewCell(randomStatus())
+				blob = cell.NewCell(false)
 				matrice.grid[i][j] = &blob
 			} else {
 				blob = *matrice.grid[i][j]
@@ -42,6 +42,14 @@ func NewGridFromImage(img image.Image) Matrice {
 	matrice = NewGrid(height, width)
 
 	addImageAt(&matrice, image.Point{X: 0, Y: 0}, img)
+
+	return matrice
+}
+
+func NewGridWithGliderGun(width, height int) Matrice {
+	matrice = NewGrid(height, width)
+
+	addGosperGliderGun(&matrice, image.Point{10, 10})
 
 	return matrice
 }

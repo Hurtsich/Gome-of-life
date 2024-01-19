@@ -33,7 +33,7 @@ const (
 
 func newNeighbor(column, row int, side Neighbors, membrane cell.Membrane) {
 	if matrice.grid[column][row] == nil {
-		blob := cell.NewCell(randomStatus())
+		blob := cell.NewCell(false)
 		matrice.grid[column][row] = &blob
 		neighborsMembrane(&blob, membrane, side)
 	} else {
