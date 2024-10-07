@@ -28,11 +28,19 @@ func main() {
 	//		fmt.Println(err)
 	//	}
 	//}
-	createGIFWithTransition("test")
+	//ma, err := matrice.NewMatriceFromRLEFile("../data/Merci.rle")
+	//ma.BigBang()
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//createGIF(&ma, "Merci")
+	//createGIFWithTransition("gol9", "merci")
+	createGIFFromName("merci")
 }
 
-func createGIFWithTransition(name string) {
-	img, err := gimg.GetImageFromFilePath("../data/b.png")
+func createGIFWithTransition(img1, img2 string) {
+	img, err := gimg.GetImageFromFilePath("../data/" + img1 + ".png")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -41,9 +49,8 @@ func createGIFWithTransition(name string) {
 	fmt.Println("Big BANG !!")
 	m.BigBang()
 	gif1, delays1 := createGIFWithLastImage(&m)
-	generateImage(m.Photo(), "last")
 
-	i2, err := gimg.GetImageFromFilePath("../data/cellule0.png")
+	i2, err := gimg.GetImageFromFilePath("../data/" + img2 + ".png")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -51,7 +58,7 @@ func createGIFWithTransition(name string) {
 	m2 := matrice.NewGridFromImage(i2)
 	fmt.Println("Big BANG !!")
 	m2.BigBang()
-	gif2, delays2 := createGIFWithLastImage(&m2)
+	gif2, delays2 := createGIFWithDelay(&m2)
 	gif2 = reverseSort(gif2)
 
 	merger := m.GetMerger(&m2)
@@ -60,7 +67,7 @@ func createGIFWithTransition(name string) {
 		fmt.Println("Generating...")
 		delays1 = append(delays1, 7)
 		photo := m.Photo()
-		pi := gimg.Upscale(photo, 3)
+		pi := gimg.Upscale(photo, 7)
 		gif1 = append(gif1, pi)
 	}
 
@@ -69,7 +76,7 @@ func createGIFWithTransition(name string) {
 	gif1 = append(gif1, gif2...)
 	delays1 = append(delays1, delays2...)
 
-	f, err := os.Create("../data/" + name + ".gif")
+	f, err := os.Create("../data/" + img1 + img2 + ".gif")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -93,15 +100,15 @@ func GenerateSlides() {
 	generateSlides("cellule2")
 	generateSlides("cellule3")
 
-	i, err := gimg.GetImageFromFilePath("../data/cellule3.png")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	m := matrice.NewGridFromImage(i)
-	fmt.Println("Big BANG !!")
-	m.BigBang()
-	createGIF(&m, "cellule3")
+	//i, err := gimg.GetImageFromFilePath("../data/cellule3.png")
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//m := matrice.NewGridFromImage(i)
+	//fmt.Println("Big BANG !!")
+	//m.BigBang()
+	//createGIF(&m, "cellule3")
 
 	generateSlides("gol0")
 	generateSlides("gol1")
@@ -113,17 +120,16 @@ func GenerateSlides() {
 	generateSlides("gol7")
 	generateSlides("gol8")
 	generateSlides("gol9")
-	generateSlides("gol10")
-
-	i, err = gimg.GetImageFromFilePath("../data/gol10.png")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	m = matrice.NewGridFromImage(i)
-	fmt.Println("Big BANG !!")
-	m.BigBang()
-	createGIF(&m, "gol10")
+	//
+	//i, err = gimg.GetImageFromFilePath("../data/gol10.png")
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+	//m = matrice.NewGridFromImage(i)
+	//fmt.Println("Big BANG !!")
+	//m.BigBang()
+	//createGIF(&m, "gol10")
 }
 
 func createGIFFromName(imgName string) {
@@ -146,7 +152,7 @@ func generateSlides(slideName string) {
 	}
 	m := matrice.NewGridFromImage(i)
 	p := m.Photo()
-	pi := gimg.Upscale(p, 10)
+	pi := gimg.Upscale(p, 7)
 
 	f, err := os.Create("../data/generated-" + slideName + ".png")
 	if err != nil {
@@ -193,13 +199,32 @@ func createGIFWithLastImage(m *matrice.Matrice) ([]*image.Paletted, []int) {
 	var images []*image.Paletted
 	var delays []int
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 50; i++ {
 		fmt.Printf("Year: %v", i)
 		delays = append(delays, 7)
 		photo := m.Photo()
-		pi := gimg.Upscale(photo, 3)
+		pi := gimg.Upscale(photo, 7)
 		images = append(images, pi)
-		m.Breath(image.Point{X: 3000, Y: 2000})
+		m.Breath()
+		fmt.Println()
+	}
+	return images, delays
+}
+
+func createGIFWithDelay(m *matrice.Matrice) ([]*image.Paletted, []int) {
+	var images []*image.Paletted
+	var delays []int
+
+	for i := 0; i < 200; i++ {
+
+		fmt.Printf("Year: %v", i)
+		delays = append(delays, 7)
+		photo := m.Photo()
+		pi := gimg.Upscale(photo, 7)
+		images = append(images, pi)
+		if i > 160 {
+			m.Breath()
+		}
 		fmt.Println()
 	}
 	return images, delays
@@ -215,7 +240,7 @@ func imagineGIF(m *matrice.Matrice) ([]*image.Paletted, []int) {
 		photo := m.Photo()
 		pi := gimg.Upscale(photo, 3)
 		images = append(images, pi)
-		m.Breath(image.Point{X: 3000, Y: 2000})
+		m.Breath()
 
 		fmt.Println()
 	}
@@ -227,19 +252,12 @@ func createGIF(m *matrice.Matrice, imageName string) {
 	var images []*image.Paletted
 	var delays []int
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 2000; i++ {
 		fmt.Printf("Year: %v", i)
-		delays = append(delays, 7)
+		delays = append(delays, i)
 		photo := m.Photo()
-		pi := gimg.Upscale(photo, 3)
-		images = append(images, pi)
-		m.Breath(image.Point{X: 3000, Y: 2000})
-
-		// if i < 320 {
-		// 	m.Breath(image.Point{X: 50, Y: 90})
-		// } else {
-		// 	m.Breath(image.Point{X: 200, Y: 200})
-		// }
+		images = append(images, gimg.Upscale(photo, 7))
+		m.Breath()
 		fmt.Println()
 	}
 

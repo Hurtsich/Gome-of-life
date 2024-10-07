@@ -1,11 +1,15 @@
 package matrice
 
 import (
+	"bufio"
 	"fmt"
-	"image"
-
 	"github.com/Hurtsich/Gome-of-life/go/cell"
 	gimg "github.com/Hurtsich/Gome-of-life/go/image"
+	"image"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 func NewGrid(height, width int) Matrice {
@@ -89,4 +93,88 @@ func addGosperGliderGun(matrix *Matrice, start image.Point) {
 	matrix.grid[start.X+3][start.Y+36].Status = true
 	matrix.grid[start.X+4][start.Y+35].Status = true
 	matrix.grid[start.X+4][start.Y+36].Status = true
+}
+
+func NewMatriceFromRLEFile(filename string) (Matrice, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return Matrice{}, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Scan()
+	line := scanner.Text()
+	width, height, err := parseFirstLine(line)
+	if err != nil {
+		return Matrice{}, err
+	}
+
+	fmt.Printf("Width = %d, Height = %d\n", width, height)
+	matrice = NewGrid(height, width+300)
+
+	re := regexp.MustCompile(`(\d*)([bo$])`)
+
+	col := 300
+	row := 0
+	length := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		matches := re.FindAllStringSubmatch(line, -1)
+		for _, match := range matches {
+			if match[1] == "" {
+				length = 1
+			} else {
+				length, err = strconv.Atoi(match[1])
+				if err != nil {
+					return Matrice{}, err
+				}
+			}
+
+			if match[2] == "$" {
+				fmt.Printf("Getting $ : skipping %d lines\n", length)
+				col = 300
+				row += length
+			} else if match[2] == "o" {
+				fmt.Printf("Getting o\n")
+				for i := 0; i < length; i++ {
+					fmt.Printf("Printing this cell : %d, %d\n", col, row)
+					matrice.grid[row][col].Status = true
+					col++
+				}
+			} else {
+				fmt.Printf("Getting b, skipping %d columns\n", length)
+				col += length
+			}
+		}
+	}
+
+	return matrice, nil
+}
+
+func parseFirstLine(line string) (width int, height int, err error) {
+	x := 0
+	y := 0
+	lineParts := strings.Split(line, ",")
+	fmt.Println(lineParts)
+	for _, part := range lineParts {
+		coordinates := strings.Split(part, "=")
+		trimedCoordinate := strings.TrimSpace(coordinates[0])
+		trimedNumber := strings.TrimSpace(coordinates[1])
+		if trimedCoordinate == "x" {
+			x, err = strconv.Atoi(trimedNumber)
+			if err != nil {
+				return
+			}
+			width = x
+		} else if trimedCoordinate == "y" {
+			y, err = strconv.Atoi(trimedNumber)
+			if err != nil {
+				return
+			}
+			height = y
+		}
+	}
+	return
 }

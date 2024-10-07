@@ -30,17 +30,15 @@ func NewCell(status bool) Cell {
 	}
 }
 
-func (c *Cell) Live(wg *sync.WaitGroup, notInDeadZone bool) {
+func (c *Cell) Live(wg *sync.WaitGroup) {
 	defer wg.Done()
 	neighbors := c.Listen()
-	if notInDeadZone {
-		if (neighbors == 2 || neighbors == 3) && c.Status {
-			c.Status = true
-		} else if neighbors == 3 && !c.Status {
-			c.Status = true
-		} else {
-			c.Status = false
-		}
+	if (neighbors == 2 || neighbors == 3) && c.Status {
+		c.Status = true
+	} else if neighbors == 3 && !c.Status {
+		c.Status = true
+	} else {
+		c.Status = false
 	}
 	c.Talk()
 }
